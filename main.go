@@ -88,7 +88,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 func pingHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "pong"})
+	json.NewEncoder(w).Encode(map[string]bool{"success": true})
 }
 
 // --- Level 2: Echo --- //
@@ -113,7 +113,7 @@ func checkAuth(w http.ResponseWriter, r *http.Request) bool {
 		http.Error(w, `{"error": "Unauthorized: Missing token"}`, http.StatusUnauthorized)
 		return false
 	}
-	
+
 	parts := strings.Split(authHeader, " ")
 	if len(parts) != 2 || parts[0] != "Bearer" || parts[1] != validToken {
 		http.Error(w, `{"error": "Unauthorized: Invalid token"}`, http.StatusUnauthorized)
@@ -159,7 +159,7 @@ func createBookHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getBooksHandler(w http.ResponseWriter, r *http.Request) {
-	// Let's assume Auth is only for GET /books as the quest image hints, 
+	// Let's assume Auth is only for GET /books as the quest image hints,
 	// though it might be wise to protect everything. The image says:
 	// GET /books (protected)
 	if !checkAuth(w, r) {
@@ -177,7 +177,7 @@ func getBooksHandler(w http.ResponseWriter, r *http.Request) {
 	defer booksMu.RUnlock()
 
 	var result []Book
-	
+
 	// Filtering
 	if authorSearch != "" {
 		for _, b := range books {
@@ -225,10 +225,10 @@ func extractID(path string) (int, error) {
 	if len(parts) < 3 {
 		return 0, fmt.Errorf("invalid path")
 	}
-	
+
 	// Last part should be the ID
 	idStr := parts[len(parts)-1]
-	
+
 	// Handles trailing slash like /books/123/ -> "123" is parts[2]
 	if idStr == "" && len(parts) >= 4 {
 		idStr = parts[len(parts)-2]
@@ -281,7 +281,7 @@ func updateBookHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
 		return
 	}
-	
+
 	if updateData.Title == "" || updateData.Author == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Title and Author are required"})
@@ -299,7 +299,7 @@ func updateBookHandler(w http.ResponseWriter, r *http.Request) {
 			if updateData.Year != 0 {
 				books[i].Year = updateData.Year
 			}
-			
+
 			w.WriteHeader(http.StatusOK)
 			json.NewEncoder(w).Encode(books[i])
 			return
